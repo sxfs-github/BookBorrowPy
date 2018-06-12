@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" href="{% static 'icon/favicon.ico' %}">
+    {% block head_link %}{% endblock %}
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/sticky-footer-navbar.css' %}" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <title>方是图书借阅系统</title>
+<body>
+    <script type="text/javascript" src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/materialize.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/error-code.js' %}"></script>
+    {% block javascript %}{% endblock %}
+
+    {% include 'home_header.html' %}
+
+    {% block main %}{% endblock %}
+
+    {% include 'home_footer.html' %}
+
+
+    <script type="text/javascript">
+        {% block javascript_code %}{% endblock %}
+    </script>
+</body>
+</html>

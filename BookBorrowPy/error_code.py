@@ -1,0 +1,45 @@
+# 成功
+SUCCESS = 0
+# 插入失败
+INSERT_ERROR = 1
+# 修改失败
+UPDATE_ERROR = 2
+# 删除失败
+DELETE_ERROR = 3
+
+# 用户已存在
+USER_EXIST = 4
+# 用户不存在
+USER_NOT_EXIST = 5
+# 用户不能删除
+USER_CANNOT_DELETE = 6
+# 用户信息不完整
+USER_INFO_NOT_COMPLETE = 7
+
+# 借阅成功
+BOOK_BORROW_SUCCESS = 8
+# 借阅失败
+BOOK_BORROW_ERROR = 9
+# 图书已被借出
+BOOK_HAS_BEEN_BORROW = 10
+# 已经借阅此书
+BOOK_ALREADY_BORROW = 11
+# 续借成功
+BOOK_RENEW_SUCCESS = 12
+# 续借失败
+BOOK_RENEW_ERROR = 13
+# 距截止日期7天内续借图书
+BOOK_DISTANCE_BORROW = 14
+# 图书尚有借出部分
+BOOK_EXIST_BORROW = 15
+# 还书成功
+RETURN_BOOK_SUCCESS = 16
+# 还书失败
+RETURN_BOOK_ERROR = 17
+
+# 图书类型已存在
+BOOK_CLASS_EXIST = 18
+
+# 数据异常
+DATA_ABNORMAL = 19
+

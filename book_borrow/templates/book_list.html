@@ -1,0 +1,144 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block main %}
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="row mb-5"></div>
+        <div class="row mb-2">
+            <h2>图书列表</h2>
+            <div><a class="btn btn-info" href="{% url 'book_borrow:expert_stock_book' %}"
+                    style="margin-left: 20px" role="button" onclick="expert_stock_book()">导出</a></div>
+            <table class="table table-hover">
+                <thead>
+                  <tr style="text-align: center">
+                      <th scope="col">书名</th>
+                      <th scope="col">作者</th>
+                      <th scope="col">库存数量</th>
+                      <th scope="col">借出数量</th>
+                      <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% if books %}
+                            {% for book in books%}
+                                <tr style="text-align: center">
+                                    <td><a href="{% url 'book_borrow:book_detailed_info' book.id %}">{{ book.book_name }}</a></td>
+                                    <td>{{ book.author }}</td>
+                                    <td>{{ book.book_num }}</td>
+                                    <td>{{ book.borrow_num }}</td>
+                                    <td><button type="button" class="btn btn-success btn-sm"  onclick="update_book({{ book.id }})">编辑</button><button type="button" class="btn btn-danger btn-sm"  onclick="delete_book_btn({{ book.id }})">删除</button></td>
+                                </tr>
+                            {% endfor %}
+                    {% else %}
+                        <tr><td style="text-align: center" colspan="5">暂无图书信息</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if books %}
+            <nav aria-label="Page navigation example">
+              <ul class="pagination justify-content-center">
+                  {% if books.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ books.previous_page_number }}" tabindex="-1">上一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                      <a class="page-link" tabindex="-1">上一页</a>
+                    </li>
+                  {% endif %}
+                {% for pg in books.paginator.page_range %}
+                    {% if books.number == pg %}
+                          <li class="page-item active">
+                            <a class="page-link" href="?page={{ pg }}">{{ pg }}<span class="sr-only">(current)</span></a>
+                          </li>
+                    {% else %}
+                          <li class="page-item"><a class="page-link" href="?page={{ pg }}">{{ pg }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if books.has_next %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ books.next_page_number }}">下一页</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled">
+                        <a class="page-link">下一页</a>
+                      </li>
+                {% endif %}
+              </ul>
+            </nav>
+        {% endif %}
+
+
+
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="modal-body">
+
+              </div>
+              <div class="modal-footer" id="modal-footer">
+
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascript_code %}
+    function update_book(book_id){
+        window.location.href = "/book_borrow/update_book_info/" + book_id
+    }
+    function delete_book_btn(book_id){
+        $('#modal-body').html('');
+        $('#exampleModalLongTitle').html('');
+        $('#modal-footer').html('')
+        $('#exampleModalLongTitle').append('删除图书');
+        $('#modal-body').append("<p>确认删除图书吗?</p>");
+        $('#modal-footer').append("<button type='button' class='btn btn-danger' onclick='delete_book("+book_id+")'>删除</button><button type='button' class='btn btn-secondary' data-dismiss='modal'>取消</button>")
+        $('#exampleModalCenter').modal('show');
+    }
+    function delete_book(book_id){
+        $.ajax({
+                type : "POST",
+                dataType : "json",
+                data :{
+                    book_id:book_id
+                },
+                url: "{% url 'book_borrow:delete_book' %}",
+                success : function(data) {
+                    $('#modal-body').html('')
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('删除图书');
+                    $('#modal-body').append("<p>"+data.msg+"</p>")
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' onclick='delete_success()'>确定</button>")
+                    $('#exampleModalCenter').modal('show')
+                },
+                error : function(data){
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('删除图书');
+                    $('#modal-body').append("<p>删除图书失败</p>");
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+                    $('#exampleModalCenter').modal('show');
+                }
+            });
+    }
+    function delete_success() {
+        window.location.href = "{% url 'book_borrow:book_lists' %}"
+    }
+
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block main %}
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="row mb-5"></div>
+        <form class="form-signin" action="" id="add_user_form">
+            <div class="row">
+                <div class='col-md-6 mb-3 form-label-group'>
+                      <label for='username'>用户名</label>
+                      <input type='text' class='form-control' id='username' placeholder='请输入用户名' required>
+                </div>
+                <div class='col-md-6 mb-3 form-label-group'>
+                    <label for='fullname'>姓名</label>
+                    <input type='text' class='form-control' id='fullname' placeholder='请输入姓名' required>
+                </div>
+            </div>
+            <div class="row">
+                <div class='col-md-6 mb-3 form-label-group'>
+                    <label for='center'>所属中心</label>
+                    <input type='text' class='form-control' id='center' placeholder='请输入所属中心' required>
+                </div>
+                <div class='col-md-6 mb-3 form-label-group'>
+                    <label for='department'>部门</label>
+                    <input type='text' class='form-control' id='department' placeholder='请输入部门' required>
+                </div>
+            </div>
+            <div class="row">
+                <div class='col-md-6 mb-3 form-label-group'>
+                    <label for='position'>岗位</label>
+                    <input type='text' class='form-control' id='position' placeholder='请输入岗位' required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="permission">权限</label>
+                    <select class="custom-select d-block w-100" id="permission">
+                    {% if permission_list %}
+                        {% for permission in permission_list %}
+                            <option value="{{ permission.id }}">{{ permission.name }}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value="-1">无</option>
+                    {% endif %}
+                    </select>
+                </div>
+            </div>
+        </form>
+        <div id="add_user_result"></div>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                <button id="add_button" class="btn btn-info btn-block" onclick="add_user()"
+                        style="margin-left: 20px">添加</button>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <div class="row mb-2">
+            <h2>用户列表</h2>
+            <table class="table table-hover">
+                <thead>
+                  <tr style="text-align: center">
+                      <th scope="col">用户名</th>
+                      <th scope="col">姓名</th>
+                      <th scope="col">所属中心</th>
+                      <th scope="col">部门</th>
+                      <th scope="col">岗位</th>
+                      <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="user_table">
+                    {% if user_profiles%}
+                        {% for profile in user_profiles%}
+                            <tr>
+                                <td>{{ profile.user.username }}</td>
+                                <td>{{ profile.user.first_name }}</td>
+                                <td>{{ profile.center }}</td>
+                                <td>{{ profile.department }}</td>
+                                <td>{{ profile.position }}</td>
+                                <td><button type='button' class='btn btn-secondary btn-sm' onclick="on_delete_click(this, '{{ profile.user.username }}')">删除</button></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modal-title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="modal-body">
+
+              </div>
+              <div class="modal-footer" id="modal-footer">
+                  <button class='btn btn-info' data-dismiss='modal'>确定</button>
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascript_code %}
+    function add_user() {
+        var username = $("#username").val();
+        var fullname = $("#fullname").val();
+        var center = $("#center").val();
+        var department = $("#department").val();
+        var position = $("#position").val();
+        if (username == "" || fullname == "" ||
+            center == "" || department == "" || position == "") {
+            return;
+        }
+
+        $('#add_button').attr('disabled',"true");
+        $('#add_button').text("正在添加...")
+
+        user_info = {
+            username: $("#username").val(),
+            fullname: $("#fullname").val(),
+            center: $("#center").val(),
+            department: $("#department").val(),
+            position: $("#position").val(),
+            permission: $("#permission").val(),
+        };
+
+        $('#add_user_result').empty();
+
+        $.ajax({
+            type : "POST",
+            dataType : "json",
+            data :user_info,
+            url: "{% url 'book_borrow:add_user' %}",
+            success : function(data) {
+                $('#user_table').empty();
+                $('#add_user_result').append("<div class='mb-3'><div class='alert alert-danger' role='alert'>"+ data.msg + "</div></div>");
+                if (data.code == SUCCESS) {
+                    window.location.href="{% url 'book_borrow:user_manage' %}";
+                }
+            },
+            error : function(data){
+            },
+            complete: function() {
+                $('#add_button').removeAttr('disabled');
+                $('#add_button').text("添加")
+            }
+        });
+    }
+
+    function on_delete_click(obj, username) {
+        $('#modal-body').empty();
+        $('#modal-title').empty();
+
+        $('#modal-title').append('<h5>删除用户</h5>');
+
+        if (username == '') {
+            $('#modal-body').append('<p>用户名不应该为空</p>')
+            $('#modal').modal('show');
+            return;
+        }
+
+        var data = {username: username}
+
+        $.ajax({
+            type : "POST",
+            dataType : "json",
+            data : data,
+            url: "{% url 'book_borrow:delete_user' %}",
+            success : function(data) {
+                if (data.code == SUCCESS) {
+                    $(obj).closest("tr").remove();
+                }
+
+                $('#modal-body').append('<p>' + data.msg + '</p>')
+                $('#modal').modal('show');
+            },
+            error : function(data){
+                $('#modal-body').append('<p>删除用户失败</p>')
+                $('#modal').modal('show');
+            }
+        });
+    }
+{% endblock %}

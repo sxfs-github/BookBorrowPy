@@ -1,0 +1,85 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block head_link %}
+<link type="text/css" rel="stylesheet" href="{% static 'css/private.css' %}" />
+{% endblock %}
+
+{% block main %}
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="py-5 text-center" style="margin-top: 30px">
+            <h2>图书详细信息</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8 order-md-1">
+                {% if book_detail_info %}
+                    <div class="mb-3" style="display: flex;justify-content: center;align-items: center">
+                        <div style="width: 210px;height: 250px;position: relative;">
+                            <img id="cover_img" src="{{ book_detail_info.cover_img_pathname }}" style="width: 100%; height: 100%">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                      <label for="book_name">BookName</label>
+                      <input type="text" class="form-control" id="book_name" value="{{ book_detail_info.book_name }}" readonly="readonly">
+                    </div>
+                    <div class="mb-3">
+                      <label for="author">Author</label>
+                      <input type="text" class="form-control" id="author" value="{{ book_detail_info.author }}" readonly="readonly">
+                    </div>
+
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                          <label for="price">定价</label>
+                          <input type="text" class="form-control" id="price" value="{{ book_detail_info.price }}元" readonly="readonly">
+                      </div>
+                      <div class="col-md-6 mb-3">
+                          <label for="book_num">数量</label>
+                          <input type="text" class="form-control" id="book_num" value="{{ book_detail_info.book_num }}本" readonly="readonly">
+                      </div>
+                    </div>
+
+                    {% if book_class_list %}
+                        <div class="mb-3">
+                            <label>图书类型</label>
+                            <div id="chips_row">
+                                {% for book_class in book_class_list %}
+                                    <div class="chip">
+                                        {{ book_class }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if book_detail_info.brief_introduction %}
+                        <div class="mb-3">
+                          <label for="press">Press</label>
+                          <input type="text" class="form-control" id="press" value="{{ book_detail_info.press }}" readonly="readonly">
+                        </div>
+                    {% endif %}
+                    {% if book_detail_info.brief_introduction %}
+                        <div class="mb-3">
+                            <label for="brief_introduction">BriefIntroduction</label>
+                            <textarea class="form-control" id="brief_introduction" rows="3" readonly="readonly">{{ book_detail_info.brief_introduction }}</textarea>
+                        </div>
+                    {% endif %}
+                    {% if book_detail_info.referee %}
+                        <div class="mb-3">
+                          <label for="referee">Referee</label>
+                          <input type="text" class="form-control" id="referee" value="{{ book_detail_info.referee }}" readonly="readonly">
+                        </div>
+                    {% endif %}
+                    {% if book_detail_info.recommended_reasons %}
+                        <div class="mb-3">
+                          <label for="recommended_reasons">RecommendedReasons</label>
+                            <textarea class="form-control" id="recommended_reasons" rows="3" readonly="readonly">{{ book_detail_info.recommended_reasons }}</textarea>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </main>
+{% endblock %}

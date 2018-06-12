@@ -1,0 +1,118 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block main %}
+    <main role="main" class="container">
+        <div class="row mb-5"></div>
+        <div class="row mb-2">
+            {% if books %}
+                {% for book in books %}
+                   <div class="col-md-6">
+                      <div class="card flex-md-row mb-4 box-shadow h-md-250">
+                        <div class="card-body d-flex flex-column align-items-start">
+                          <h4 class="mb-1">
+                                {{ book.book_name }}
+                          </h4>
+                            <span style="width: 180px;">{{ book.brief_introduction | slice:"0:60" }}</span>
+                          <button type="button" class="btn btn-secondary btn-lg" onclick="book_borrowing({{ book.id }})">借书</button>
+                        </div>
+                        <img class="card-img-right flex-auto d-none d-md-block" src="{{ book.cover_img_pathname }}" alt="Card image cap" style="width: 210px;height: 250px" onclick="book_detailed_info({{ book.id }})">
+                      </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% if books %}
+            <nav aria-label="Page navigation example">
+              <ul class="pagination justify-content-center">
+                  {% if books.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?page={{ books.previous_page_number }}" tabindex="-1">上一页</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                      <a class="page-link" tabindex="-1">上一页</a>
+                    </li>
+                  {% endif %}
+                {% for pg in books.paginator.page_range %}
+                    {% if books.number == pg %}
+                          <li class="page-item active">
+                            <a class="page-link" href="?page={{ pg }}">{{ pg }}<span class="sr-only">(current)</span></a>
+                          </li>
+                    {% else %}
+                          <li class="page-item"><a class="page-link" href="?page={{ pg }}">{{ pg }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if books.has_next %}
+                      <li class="page-item">
+                        <a class="page-link" href="?page={{ books.next_page_number }}">下一页</a>
+                      </li>
+                    {% else %}
+                      <li class="page-item disabled">
+                        <a class="page-link">下一页</a>
+                      </li>
+                {% endif %}
+              </ul>
+            </nav>
+        {% else %}
+              <div class="py-5 text-center">
+                <h2>暂无图书可供借阅</h2>
+              </div>
+        {% endif %}
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">借阅图书</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="modal-body">
+
+              </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">确定</button>
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascript_code %}
+    function book_detailed_info(book_id){
+        window.location.href = "/book_borrow/book_detailed_info/" + book_id
+    }
+    function book_borrowing(book_id){
+            var user_is_login = '{{ request.user.is_authenticated }}';
+            if(user_is_login=='True'){
+                $.ajax({
+                    type : "POST",
+                    dataType : "json",
+                    data :{
+                         book_id : book_id
+                    },
+                    url: "{% url 'book_borrow:book_borrowing' %}",
+                    success : function(data) {
+                        $('#modal-body').html('')
+                        $('#modal-body').append("<p>"+data.msg+"</p>")
+                        $('#exampleModalCenter').modal('show')
+
+                    },
+                    error : function(data){
+                        $('#modal-body').html('')
+                        $('#modal-body').append("<p>借阅失败</p>")
+                        $('#exampleModalCenter').modal('show')
+                    }
+                });
+            }else{
+                $('#modal-body').html('')
+                $('#modal-body').append("<p>请登录后再进行借阅</p>")
+                $('#exampleModalCenter').modal('show')
+            }
+
+    }
+{% endblock %}

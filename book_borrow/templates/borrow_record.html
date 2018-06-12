@@ -1,0 +1,147 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block main %}
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="row mb-5"></div>
+        <div class="row mb-2">
+            <table class="table table-hover">
+                <thead>
+                  <tr style="text-align: center">
+                      <th scope="col">工号:{{ user.username }}</th>
+                      <th scope="col">姓名:{{ user.first_name }}</th>
+                      <th scope="col">所属部门:{{ user.userprofile.center }}-{{ user.userprofile.department }}</th>
+                  </tr>
+                </thead>
+            </table>
+            <h2>我的借阅</h2>
+            <table class="table table-hover">
+                <thead>
+                  <tr style="text-align: center">
+                      <th scope="col">书名</th>
+                      <th scope="col">借阅时间</th>
+                      <th scope="col">截止时间</th>
+                      <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% if my_borrow_item %}
+                            {% for my_borrow_book in my_borrow_item%}
+                                <tr style="text-align: center">
+                                    <td>{{ my_borrow_book.book_name }}</td>
+                                    <td>{{ my_borrow_book.borrowed_time }}</td>
+                                    <td>{{ my_borrow_book.end_time }}</td>
+                                    <td><button type="button" class="btn btn-secondary btn-sm"  onclick="renew_book({{ my_borrow_book.id }})">续借</button></td>
+                                </tr>
+                            {% endfor %}
+                    {% else %}
+                        <tr><td style="text-align: center" colspan="4">暂无借阅记录</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% if 'profiles.return_book' in request.user.get_group_permissions %}
+            <div class="row mb-2">
+                <h2>借阅记录</h2>
+                <table class="table table-hover">
+                  <thead>
+                      <tr style="text-align: center">
+                          <th scope="col">书名</th>
+                          <th scope="col">借阅人</th>
+                          <th scope="col">部门</th>
+                          <th scope="col">借阅时间</th>
+                          <th scope="col">截止时间</th>
+                          <th scope="col">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                        {% if all_borrow_item %}
+                                {% for all_borrow_book in all_borrow_item %}
+                                <tr style="text-align: center">
+                                    <td>{{ all_borrow_book.book_name }}</td>
+                                    <td>{{ all_borrow_book.borrower }}</td>
+                                    <td>{{ all_borrow_book.borrower_department }}</td>
+                                    <td>{{ all_borrow_book.borrowed_time }}</td>
+                                    <td>{{ all_borrow_book.end_time }}</td>
+                                    <td><button type="button" class="btn btn-secondary btn-sm"  onclick="return_book({{ all_borrow_book.id }})">还书</button></td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td style="text-align: center" colspan="6">暂无借阅记录</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="modal-body">
+
+              </div>
+                <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="location.reload()">确定</button>
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascript_code %}
+    function renew_book(borrow_id){
+            $.ajax({
+                type : "POST",
+                dataType : "json",
+                data :{
+                     borrow_id : borrow_id
+                },
+                url: "{% url 'book_borrow:renew_book' %}",
+                success : function(data) {
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').append('续借图书');
+                    $('#modal-body').append("<p>"+data.msg+"</p>");
+                    $('#exampleModalCenter').modal('show');
+                },
+                error : function(data){
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').append('续借图书');
+                    $('#modal-body').append("<p>续借失败</p>");
+                    $('#exampleModalCenter').modal('show');
+                }
+            });
+    }
+
+    function return_book(borrow_item_id){
+        $.ajax({
+            type : "POST",
+            dataType : "json",
+            data :{
+                 borrow_item_id : borrow_item_id
+            },
+            url: "{% url 'book_borrow:return_book' %}",
+            success : function(data) {
+                $('#modal-body').html('');
+                $('#exampleModalLongTitle').append('归还图书')
+                $('#modal-body').append("<p>"+data.msg+"</p>");
+                $('#exampleModalCenter').modal('show');
+            },
+            error : function(data){
+                $('#modal-body').html('');
+                $('#exampleModalLongTitle').append('归还图书')
+                $('#modal-body').append("<p>还书失败</p>");
+                $('#exampleModalCenter').modal('show');
+            }
+        });
+    }
+{% endblock %}

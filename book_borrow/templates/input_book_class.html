@@ -1,0 +1,301 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block head_link %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/bootstrap-table.min.css' %}">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/jquery-treegrid/0.2.0/css/jquery.treegrid.min.css">
+{% endblock %}
+{% block javascript %}
+    <script src="{% static 'js/bootstrap-table.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-treegrid.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-zh-CN.min.js' %}"></script>
+    <script src="{% static 'js/jquery.treegrid.min.js' %}"></script>
+{% endblock %}
+{% block main %}
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="row mb-5"></div>
+        <div class="row mb-2">
+            <h2>图书类型</h2>
+            <div>
+                <button type="button" class="btn btn-info"
+                    style="margin-left: 20px" onclick="add_main_class()">添加图书类型</button>
+            </div>
+        </div>
+        <table id="table"></table>
+
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="modal-body">
+
+              </div>
+              <div class="modal-footer" id="modal-footer">
+
+              </div>
+            </div>
+          </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascript_code %}
+    function add_main_class(){
+        $('#modal-body').html('');
+        $('#exampleModalLongTitle').html('');
+        $('#modal-footer').html('');
+        $('#exampleModalLongTitle').append('添加图书类型');
+        $.ajax({
+            type : "get",
+            dataType : "json",
+            data :{
+                parent_id: 0
+            },
+            url: "{% url 'book_borrow:find_book_class_parent' %}",
+            success : function(data) {
+                var body_header = "<div class='mb-3'><label>选择上级类型</label><select class='form-control' id='main_class'>";
+                var body_main = "";
+                var body_footer = "</select></div>";
+                body_main +="<option value='无'>无</option>"
+                for (var i = 0; i < data.book_class.length; i++) {
+                    body_main += "<option value='"+ data.book_class[i].id +"'>"+ data.book_class[i].name +"</option>"
+                }
+
+                var body = body_header+body_main+body_footer
+                $('#modal-body').append(body);
+                $('#modal-body').append("<div class='mb-3'><label for='book_main_class'>图书类型</label><input type='text' class='form-control' id='book_main_class' placeholder='请输入图书类型'></div>");
+            },
+            error : function(data){
+
+            }
+        });
+
+
+        $('#modal-footer').append("<button type='button' class='btn btn-primary' onclick='submit_main_class()'>保存</button><button type='button' class='btn btn-secondary' data-dismiss='modal'>取消</button>");
+        $('#exampleModalCenter').modal('show');
+    }
+
+    function submit_main_class(){
+        var parent_id = $('#main_class').val();
+        var book_class_name = $('#book_main_class').val();
+        var book_class_data = {}
+
+        if(book_class_name==""){
+            $('#modal-body').append("<div class='mb-3'><div class='alert alert-danger' role='alert'>请填写图书类型</div></div>");
+        }else{
+            if(parent_id=="无"){
+                book_class_data={
+                    parent_id:0,
+                    name:book_class_name
+                }
+            }else{
+                book_class_data={
+                    parent_id:parent_id,
+                    name:book_class_name
+                }
+            }
+
+            $.ajax({
+                type : "POST",
+                dataType : "json",
+                data :book_class_data,
+                url: "{% url 'book_borrow:input_book_class' %}",
+                success : function(data) {
+                    $('#modal-body').html('')
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('添加图书类型');
+                    $('#modal-body').append("<p>"+data.msg+"</p>")
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' onclick='location.reload()'>确定</button>")
+                    $('#exampleModalCenter').modal('show')
+                },
+                error : function(data){
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('添加图书类型');
+                    $('#modal-body').append("<p>添加一级图书类型失败</p>");
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+                    $('#exampleModalCenter').modal('show');
+                }
+            });
+        }
+    }
+
+    var $table = $('#table');
+    $(function() {
+        $table.bootstrapTable({
+            url: '{% url 'book_borrow:book_class_tree' %}',
+            striped: true,
+            sidePagination: 'server',
+            locale:'zh-CN',
+            columns: [
+                {
+                    field: 'name',
+                    title: '图书类型',
+                },
+                {
+                    field: 'button',
+                    title: '操作',
+                    sortable: false,
+                    align: 'center',
+                    formatter:function(value, row , index){
+                        return "<button type='button' class='btn btn-success btn-sm' style='margin-right: 10px' onclick=\"update_class_btn("+ row.id + ","+ row.parent_id +",'"+row.name+"')\">编辑</button><button type='button' class='btn btn-danger btn-sm' onclick='del_class_btn("+ row.id +")'>删除</button>";
+
+                    }
+                }
+            ],
+            treeShowField: 'name',
+            parentIdField: 'parent_id',
+            onLoadSuccess: function() {
+                $table.treegrid({
+                    treeColumn: 0,
+                    onChange: function() {
+                        $table.bootstrapTable('resetWidth');
+                    }
+                });
+            }
+        });
+    });
+
+    function update_class_btn(book_class_id,parent_id,book_class_name){
+        $('#modal-body').html('');
+        $('#exampleModalLongTitle').html('');
+        $('#modal-footer').html('');
+        $('#exampleModalLongTitle').append('修改图书类型');
+        if(parent_id==0){
+            $('#modal-body').append("<div class='mb-3'><label for='book_main_class'>图书类型</label><input type='text' class='form-control' id='book_main_class' value='"+book_class_name+"'></div>");
+        }else{
+            $.ajax({
+                type : "get",
+                dataType : "json",
+                data :{
+                    parent_id: 0
+                },
+                url: "{% url 'book_borrow:find_book_class_parent' %}",
+                success : function(data) {
+                    var body_header = "<div class='mb-3'><label>选择上级类型</label><select class='form-control' id='main_class'>";
+                    var body_main = "";
+                    var body_footer = "</select></div>";
+                    for (var i = 0; i < data.book_class.length; i++) {
+                        if(parent_id==data.book_class[i].id){
+                            body_main += "<option value='"+ data.book_class[i].id +"' selected='selected'>"+ data.book_class[i].name +"</option>"
+                        }else{
+                            body_main += "<option value='"+ data.book_class[i].id +"'>"+ data.book_class[i].name +"</option>"
+                        }
+
+                    }
+
+                    var body = body_header+body_main+body_footer
+                    $('#modal-body').append(body);
+                    $('#modal-body').append("<div class='mb-3'><label for='book_main_class'>图书类型</label><input type='text' class='form-control' id='book_main_class' value='"+book_class_name+"'></div>");
+                },
+                error : function(data){
+
+                }
+            });
+        }
+        $('#modal-footer').append("<button type='button' class='btn btn-success' onclick='update_book_class("+book_class_id+")'>修改</button><button type='button' class='btn btn-secondary' data-dismiss='modal'>取消</button>");
+        $('#exampleModalCenter').modal('show');
+    }
+
+
+    function update_book_class(book_class_id){
+        var parent_id = $('#main_class').val();
+        var book_class_name = $('#book_main_class').val();
+        var book_class_data = {}
+
+        if(book_class_name==""){
+            $('#modal-body').append("<div class='mb-3'><div class='alert alert-danger' role='alert'>请填写图书类型</div></div>");
+        }else{
+            if(parent_id=="无"){
+                book_class_data={
+                    book_class_id:book_class_id,
+                    parent_id:0,
+                    name:book_class_name
+                }
+            }else{
+                book_class_data={
+                    book_class_id:book_class_id,
+                    parent_id:parent_id,
+                    name:book_class_name
+                }
+            }
+
+            $.ajax({
+                type : "POST",
+                dataType : "json",
+                data :book_class_data,
+                url: "{% url 'book_borrow:update_book_class' %}",
+                success : function(data) {
+                    $('#modal-body').html('')
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('修改图书类型');
+                    $('#modal-body').append("<p>"+data.msg+"</p>")
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' onclick='location.reload()'>确定</button>")
+                    $('#exampleModalCenter').modal('show')
+                },
+                error : function(data){
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('修改图书类型');
+                    $('#modal-body').append("<p>修改图书类型失败</p>");
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+                    $('#exampleModalCenter').modal('show');
+                }
+            });
+        }
+    }
+
+
+
+    function del_class_btn(book_class_id){
+        $('#modal-body').html('');
+        $('#exampleModalLongTitle').html('');
+        $('#modal-footer').html('')
+        $('#exampleModalLongTitle').append('删除图书类型');
+        $('#modal-body').append("<p>确认删除该图书类型吗?</p>");
+        $('#modal-footer').append("<button type='button' class='btn btn-danger' onclick='del_book_class("+book_class_id+")'>删除</button><button type='button' class='btn btn-secondary' data-dismiss='modal'>取消</button>")
+        $('#exampleModalCenter').modal('show');
+    }
+
+    function del_book_class(book_class_id){
+        $.ajax({
+            type : "POST",
+            dataType : "json",
+            data :{
+                book_class_id: book_class_id
+            },
+            url: "{% url 'book_borrow:del_book_class' %}",
+            success : function(data) {
+                $('#modal-body').html('')
+                $('#exampleModalLongTitle').html('');
+                $('#modal-footer').html('')
+                $('#exampleModalLongTitle').append('删除图书类型');
+                $('#modal-body').append("<p>"+data.msg+"</p>")
+                $('#modal-footer').append("<button type='button' class='btn btn-secondary' onclick='location.reload()'>确定</button>")
+                $('#exampleModalCenter').modal('show')
+            },
+            error : function(data){
+                $('#modal-body').html('');
+                $('#exampleModalLongTitle').html('');
+                $('#modal-footer').html('')
+                $('#exampleModalLongTitle').append('删除图书类型');
+                $('#modal-body').append("<p>删除图书类型失败</p>");
+                $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+                $('#exampleModalCenter').modal('show');
+            }
+        });
+
+    }
+{% endblock %}

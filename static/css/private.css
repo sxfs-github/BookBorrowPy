@@ -1,0 +1,32 @@
+.chip {
+	display: inline-block;
+	height: 32px;
+	font-size: 13px;
+	font-weight: 500;
+	color: rgba(0,0,0,0.6);
+	line-height: 32px;
+	padding: 0 12px;
+	border-radius: 16px;
+	background-color: #e4e4e4;
+	margin-bottom: 5px;
+	margin-right: 5px
+}
+
+.chip .close {
+	cursor: pointer;
+	float: right;
+	font-size: 16px;
+	line-height: 32px;
+	padding-left: 8px
+}
+
+.img_input {
+    opacity:0;
+    filter:alpha(opacity=0);
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 9;
+}

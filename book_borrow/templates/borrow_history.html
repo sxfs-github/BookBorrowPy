@@ -1,0 +1,41 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block main %}
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="row mb-5"></div>
+        <div class="row mb-2">
+            <h2>历史借阅记录</h2>
+            <div><a class="btn btn-info" href="{% url 'book_borrow:expert_borrow_history' %}"
+                    style="margin-left: 20px" role="button">导出</a></div>
+            <table class="table table-hover">
+              <thead>
+                  <tr style="text-align: center">
+                      <th scope="col">书名</th>
+                      <th scope="col">借阅人</th>
+                      <th scope="col">部门</th>
+                      <th scope="col">借阅时间</th>
+                      <th scope="col">还书时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    {% if all_borrow_history %}
+                        {% for borrow_history in all_borrow_history%}
+                            <tr style="text-align: center">
+                                <td>{{ borrow_history.book_name }}</td>
+                                <td>{{ borrow_history.borrower }}</td>
+                                <td>{{ borrow_history.borrower_department }}</td>
+                                <td>{{ borrow_history.borrowed_time }}</td>
+                                <td>{{ borrow_history.book_return_time }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr><td style="text-align: center" colspan="5">暂无历史借阅记录</td></tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+{% endblock %}

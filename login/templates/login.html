@@ -1,0 +1,46 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="{% static 'icon/favicon.ico' %}">
+
+    <title>方是图书借阅系统</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static 'css/floating-labels.css' %}" rel="stylesheet">
+</head>
+
+<body>
+<form class="form-signin" action="{% url 'login:login' %}" method="post">
+    {% csrf_token %}
+    <div class="text-center mb-4">
+        <h1 class="h3 mb-3 font-weight-normal">欢迎使用方是图书借阅系统</h1>
+    </div>
+    <div class="form-label-group">
+        <input type="text" id="username" class="form-control" placeholder="请输入用户名" name="username" required>
+        <label for="username">用户名</label>
+    </div>
+
+    <div class="form-label-group">
+        <input type="password" id="password" class="form-control" placeholder="请输入密码" name="password" required>
+        <label for="password">密码</label>
+    </div>
+    <div class="form-label-group">
+        {% if login_error %}
+            <div class="alert alert-danger" role="alert">
+                {{ login_error }}
+            </div>
+        {% endif %}
+    </div>
+    <button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
+    <p class="mt-5 mb-3 text-muted text-center">© 山西方是科技有限公司</p>
+</form>
+</body>
+</html>

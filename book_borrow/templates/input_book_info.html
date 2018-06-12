@@ -1,0 +1,336 @@
+{% extends 'home_base.html' %}
+
+{% load static %}
+
+{% block head_link %}
+<link type="text/css" rel="stylesheet" href="{% static 'css/private.css' %}" />
+{% endblock %}
+
+{% block main %}
+
+    <!-- Begin page content -->
+    <main role="main" class="container">
+        <div class="py-5 text-center" style="margin-top: 30px">
+            <h2>登记图书信息</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-2"></div>
+            <div class="col-md-8 order-md-1">
+              <form id="book_form">
+                  {% csrf_token %}
+              <input type="text" hidden="hidden" name="id" value="{{ book_info.id }}">
+                <div class="mb-3" style="display: flex;justify-content: center;align-items: center">
+                    <div style="width: 210px;height: 250px;position: relative;">
+                        {% if book_info %}
+                            <img class="cover_img" src="{{ book_info.cover_img_pathname }}" style="width: 100%; height: 100%">
+                        {% else %}
+                            <img class="cover_img" src="{% static 'image/upload_img.png' %}" style="width: 100%; height: 100%">
+                        {% endif %}
+                        <input id="cover_img_input" type="file" class="img_input"
+                           name="cover_img" accept="image/*" onchange="cover_img_change(this)">
+                    </div>
+                </div>
+                <div class="mb-3">
+                  <label for="book_name">图书名称</label>
+                  <input type="text" class="form-control" id="book_name" name="book_name" value="{{ book_info.book_name }}" placeholder="请输入图书名称">
+                  <div class="invalid-feedback" id="book_name_err">
+                    图书名称不能为空
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="author">作者</label>
+                  <input type="text" class="form-control" id="author" name="author" value="{{ book_info.author }}" placeholder="请输入作者">
+                  <div class="invalid-feedback" id="author_err">
+                    作者不能为空
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                      <label for="price">定价</label>
+                      <input type="text" class="form-control" id="price" name="price" value="{{ book_info.price }}" placeholder="请输入定价" onblur="price_re()">
+                      <div class="invalid-feedback" id="price_err">
+                        定价不能为空
+                      </div>
+                      <div class="invalid-feedback" id="price_re_err">
+                        请输入正确的定价
+                      </div>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                      <label for="book_num">数量</label>
+                      <input type="number" class="form-control" id="book_num" value="1" name="book_num" value="{{ book_info.book_num }}" placeholder="请输入图书数量" onblur="book_num_re()">
+                      <div class="invalid-feedback" id="book_num_err">
+                        图书数量不能为空
+                      </div>
+                      <div class="invalid-feedback" id="book_num_re_err">
+                        请输入正确的数量
+                      </div>
+                  </div>
+                </div>
+
+
+                <div class="row">
+                  <div class="col-md-5 mb-3">
+                    <label for="book_main_class">图书一级分类</label>
+                    <select class="custom-select d-block w-100" id="book_main_class" onchange="update_child_class()">
+                      {% if book_main_class_list %}
+                            {% for book_main_class in book_main_class_list %}
+                                    <option value="{{ book_main_class.id }}">{{ book_main_class.name }}</option>
+                            {% endfor %}
+                      {% endif %}
+                    </select>
+                  </div>
+                  <div class="col-md-5 mb-3">
+                      <label for="book_child_class">图书二级分类</label>
+                       <select class="custom-select d-block w-100" id="book_child_class">
+                          {% if book_child_class_list %}
+                                    {% for book_child_class in book_child_class_list %}
+                                            <option value="{{ book_child_class.id }}">{{ book_child_class.name }}</option>
+                                    {% endfor %}
+                          {% else %}
+                                <option value="-1">无</option>
+                          {% endif %}
+                       </select>
+                  </div>
+                  <div class="col-md-2 mb-3">
+                      <label for="book_num">添加</label>
+                      <button type="button" class="btn btn-secondary form-control" onclick="add_chips()">添加</button>
+                  </div>
+                  <input id="book_class_input" type="text" hidden="hidden" value="{{ book_info.book_class }}" name="book_class">
+                </div>
+                <div class="mb-3">
+                    <div id="chips_row">
+                        {% if book_class_list %}
+                            {% for book_class in book_class_list %}
+                                <div class="chip">
+                                    {{ book_class }}<i class="close material-icons" onclick="delete_class(this)">close</i>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="press">出版社</label>
+                  <input type="text" class="form-control" id="press" name="press" value="{{ book_info.press }}" placeholder="请输入出版社">
+                </div>
+                <div class="mb-3">
+                    <label for="brief_introduction">简介</label>
+                    <textarea class="form-control" placeholder="请输入简介" id="brief_introduction" name="brief_introduction" rows="3">{% if book_info %}{{ book_info.brief_introduction }}{% endif %}</textarea>
+                </div>
+                <div class="mb-3">
+                  <label for="referee">推荐人</label>
+                  <input type="text" class="form-control" id="referee" name="referee" value="{{ book_info.referee }}" placeholder="请输入推荐人">
+                </div>
+                <div class="mb-3">
+                  <label for="recommended_reasons">推荐理由</label>
+                    <textarea class="form-control" placeholder="请输入推荐理由" id="recommended_reasons" name="recommended_reasons" rows="3">{% if book_info %}{{ book_info.recommended_reasons }}{% endif %}</textarea>
+                </div>
+                <hr class="mb-4">
+                <button class="btn btn-secondary btn-lg btn-block" onclick="commit_book()" type="button">保存</button>
+              </form>
+            </div>
+        </div>
+
+        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id="modal-body">
+
+              </div>
+                <div class="modal-footer" id="modal-footer">
+                </div>
+            </div>
+          </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block javascript_code %}
+    function cover_img_change(obj) {
+        var file = obj.files[0];
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var img = $('.cover_img');
+            img.attr('src',e.target.result)
+        }
+        reader.readAsDataURL(file)
+    }
+    function price_re() {
+        var price = $('#price').val();
+        var reg = /(^[1-9]\d*(\.\d{1,2})?$)|(^0(\.\d{1,2})?$)/;
+        if(reg.test(price)) {
+            $('#price_re_err').hide();
+        } else {
+            $('#price_re_err').show();
+        }
+    }
+
+    function book_num_re(){
+        var book_num = $('#book_num').val();
+        var reg = /(^[0-9]*[1-9][0-9]*$)/;
+        if(reg.test(book_num)){
+            $('#book_num_re_err').hide();
+        }else{
+            $('#book_num_re_err').show();
+        }
+    }
+
+    function update_child_class() {
+        var main_class_id = $('#book_main_class').val()
+        $.get({
+            url: "/book_borrow/update_child_class/" + main_class_id,
+            dataType: 'json',
+            success: function (data) {
+                $('#book_child_class').html('')
+                if(data.book_child_class_list.length == 0){
+                    $('#book_child_class').append("<option value='-1'>无</option>")
+                }else{
+                    for (var i = 0; i < data.book_child_class_list.length; i++) {
+                        $('#book_child_class').append("<option value='" + data.book_child_class_list[i].id + "'>" + data.book_child_class_list[i].name + "</option>")
+                    }
+                }
+            },
+            error: function(data){
+                alert(data);
+            }
+        })
+    }
+
+    function add_chips() {
+        if ($('#book_main_class').val() == '' || $('#book_main_class').val() == null){
+            $('#modal-body').html('');
+            $('#exampleModalLongTitle').html('');
+            $('#modal-footer').html('')
+            $('#exampleModalLongTitle').append('添加图书类型');
+            $('#modal-body').append("<p>请先添加一级图书类型</p>");
+            $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+            $('#exampleModalCenter').modal('show');
+        } else {
+            var flag = false
+            var chips_row = $('#chips_row');
+
+
+            var main_class_id = $('#book_main_class').val()
+            var child_class_id = $('#book_child_class').val()
+            var main_class = $('#book_main_class').children('*[value=' + main_class_id + ']').text()
+            var child_class = $('#book_child_class').children('*[value=' + child_class_id + ']').text()
+
+            var book_class = main_class + '/' + child_class
+            var book_class_id = main_class_id + '/' + child_class_id
+            var book_class_input = $('#book_class_input');
+            var current_class = book_class_input.val();
+            if (current_class == '') {
+                book_class_input.val(book_class_id);
+            } else {
+                var current_class_arr = current_class.split(';')
+                for (let i = 0; i < current_class_arr.length; i++) {
+                    if(book_class_id == current_class_arr[i]){
+                        flag=true
+                    }
+                }
+                if(flag){
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('图书类型');
+                    $('#modal-body').append("<p>您已添加此类型，请勿重复添加</p>");
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+                    $('#exampleModalCenter').modal('show');
+                } else {
+                    book_class_input.val(current_class + ';' + book_class_id);
+                }
+            }
+            if(!flag){
+                chips_row.append('<div class="chip">' + book_class +
+                                '<i class="close material-icons" onclick="delete_class(this)">close</i></div>');
+            }
+
+        }
+    }
+    function delete_class(obj) {
+        var delete_class = $(obj).val();
+        var book_class_input = $('#book_class_input');
+        var current_class = book_class_input.val();
+        var current_class_arr = current_class.split(';')
+        current_class_arr.splice(current_class_arr.indexOf(delete_class), 1);
+        book_class_input.val(current_class_arr.join());
+    }
+
+
+    function commit_book() {
+        var isError = false;
+
+        var book_name = $("#book_name").val();
+        if (book_name == null || book_name == "") {
+            $("#book_name_err").show();
+            isError = true;
+        } else {
+            $("#book_name_err").hide();
+        }
+
+        var author = $("#author").val();
+        if (author == null || author == "") {
+            $("#author_err").show();
+            isError = true;
+        } else {
+            $("#author_err").hide();
+        }
+
+        var price = $("#price").val();
+        if (price == null || price == "") {
+            $("#price_err").show();
+            isError = true;
+        } else {
+            $("#price_err").hide();
+        }
+
+        var book_num = $('#book_num').val();
+        if (book_num == null || book_num == "") {
+            $("#book_num_err").show();
+            isError = true;
+        } else {
+            $("#book_num_err").hide();
+        }
+
+        if (!isError) {
+            var form = new FormData(document.getElementById("book_form"));
+            $.ajax({
+                type : "POST",
+                dataType : "json",
+                data :form,
+                processData:false,
+                contentType:false,
+                url: "{% url 'book_borrow:commit_book_info' %}",
+                success : function(data) {
+                    $('#modal-body').html('')
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('登记图书');
+                    $('#modal-body').append("<p>"+data.msg+"</p>")
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' onclick='commit_success()'>确定</button>")
+                    $('#exampleModalCenter').modal('show')
+                },
+                error : function(err){
+                    $('#modal-body').html('');
+                    $('#exampleModalLongTitle').html('');
+                    $('#modal-footer').html('')
+                    $('#exampleModalLongTitle').append('图书');
+                    $('#modal-body').append("<p>程序出现异常啦</p>");
+                    $('#modal-footer').append("<button type='button' class='btn btn-secondary' data-dismiss='modal'>确定</button>")
+                    $('#exampleModalCenter').modal('show');
+                }
+            });
+        }
+    }
+
+    function commit_success() {
+        window.location.href = "{% url 'book_borrow:input_book_info' %}"
+    }
+{% endblock %}

@@ -1,0 +1,52 @@
+<header>
+      <!-- Fixed navbar -->
+      <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+        <span class="navbar-brand">方是图书借阅系统</span>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'book_borrow:index' %}">首页</a>
+            </li>
+            {% if 'profiles.borrow_book' in request.user.get_group_permissions %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'book_borrow:book_borrow_items' %}">借阅情况</a>
+                </li>
+            {% endif %}
+            {% if 'profiles.see_book_borrow_history' in request.user.get_group_permissions %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'book_borrow:borrow_history' %}">历史借阅</a>
+                </li>
+            {% endif %}
+            {% if 'profiles.write_book_info' in request.user.get_group_permissions %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'book_borrow:input_book_info' %}">登记图书</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'book_borrow:jump_class_tree' %}">图书类型</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'book_borrow:book_lists' %}">图书列表</a>
+                </li>
+            {% endif %}
+            {% if 'profiles.edit_user' in request.user.get_group_permissions %}
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'book_borrow:user_manage' %}">用户管理</a>
+                </li>
+            {% endif %}
+
+          </ul>
+          {% if not request.user.is_authenticated %}
+             <a class="btn btn-outline-light" href="{% url 'login:login' %}">登录</a>
+            {% else %}
+            <form name="logout" method="post" action="{% url 'login:logout' %}" class="form-inline mt-2 mt-md-0">
+                {% csrf_token %}
+                <span class="mr-sm-2" style="color: #ffffff">欢迎,{{ request.user.first_name }}</span>
+                <a href="javascript:document.logout.submit()" class="btn btn-outline-light">注销</a>
+            </form>
+        {% endif %}
+        </div>
+      </nav>
+</header>
