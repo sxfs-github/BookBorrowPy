@@ -25,12 +25,54 @@ import pandas as pd
 # 图书管理系统首页
 @require_GET
 def index(request):
-    book_list = Book.objects.values('id', 'book_name', 'brief_introduction', 'cover_img_pathname')
+    search_name = request.GET.get('search_name')
+    main_class_id = request.GET.get('main_class_id')
+    child_class_id = request.GET.get('child_class_id')
+    if search_name is None:
+        search_name = ''
+    if main_class_id is None:
+        main_class_id = '-1'
+    if child_class_id is None:
+        child_class_id = '-1'
+
+    if search_name == '':
+        if child_class_id == '-1':
+            if main_class_id == '-1':
+                book_list = Book.objects.values('id', 'book_name', 'brief_introduction', 'cover_img_pathname')
+            else:
+                search_book_class = BookClass.objects.get(id=main_class_id)
+                book_list = search_book_class.book_list.all()
+        else:
+            search_book_class = BookClass.objects.get(id=child_class_id)
+            book_list = search_book_class.book_list.all()
+    else:
+        book_list_search = Book.objects.values('id', 'book_name', 'brief_introduction', 'cover_img_pathname'). \
+            filter(book_name__contains=search_name)
+        if child_class_id == '-1':
+            if main_class_id == '-1':
+                book_list = book_list_search
+            else:
+                search_book_class = BookClass.objects.get(id=main_class_id)
+                book_list = search_book_class.book_list.all() | book_list_search
+        else:
+            search_book_class = BookClass.objects.get(id=child_class_id)
+            book_list = search_book_class.book_list.all() | book_list_search
 
     paginator = Paginator(book_list, 4)
 
     page = request.GET.get('page')
 
+    book_main_class_list = BookClass.objects.filter(parent_id=0)
+    if len(book_main_class_list) == 0:
+        book_main_class_list = []
+        book_child_class_list = []
+    else:
+        if main_class_id != '':
+            book_child_class_list = BookClass.objects.filter(parent_id=main_class_id)
+        else:
+            book_child_class_list = BookClass.objects.filter(parent_id=book_main_class_list[0].id)
+            if len(book_child_class_list) == 0:
+                book_child_class_list = []
     try:
         books = paginator.page(page)
     except PageNotAnInteger:
@@ -38,7 +80,12 @@ def index(request):
     except EmptyPage:
         books = paginator.page(paginator.num_pages)
     return render(request, 'index.html', {
-        'books': books
+        'books': books,
+        'book_main_class_list': book_main_class_list,
+        'book_child_class_list': book_child_class_list,
+        'search_name': search_name,
+        'main_class_id': int(main_class_id),
+        'child_class_id': int(child_class_id)
     })
 
 
@@ -97,7 +144,6 @@ def commit_book_info(request):
     if not form.is_valid():
         data = {'code': error_code.INSERT_ERROR, 'msg': '登记图书失败'}
         return HttpResponse(json.dumps(data))
-
     if request.POST.get('id') == '':
         now_time = '%.0f' % (time.time() * 10 ** 7)
         picture_name = request.user.username + '-' + now_time + '.jpg'
@@ -121,6 +167,7 @@ def commit_book_info(request):
                                        recommended_reasons=request.POST.get('recommended_reasons', ''),
                                        brief_introduction=request.POST.get('brief_introduction', ''),
                                        cover_img_pathname=upload_url)
+            print('99999--' + request.POST.get('book_class'))
             add_book_class(request.POST.get('book_class', ''), book)
             book.save()
             data = {'code': error_code.SUCCESS, 'msg': '登记图书成功'}

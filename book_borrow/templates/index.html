@@ -4,6 +4,69 @@
 
 {% block main %}
     <main role="main" class="container">
+        <div class="row" style="padding-top: 20px;">
+            <div class="col-md-11">
+                <div class="input-group input-group-lg">
+                  <input type="text" id="book_search" class="form-control" aria-label="Large" placeholder="请输入您要搜索的图书名称" value="{{ search_name }}" aria-describedby="inputGroup-sizing-sm">
+                </div>
+            </div>
+            <div class="col-md-1"> <button id="add_button" class="btn btn-secondary" onclick="search_books()">搜索</button></div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <label for="book_main_class" class="col-form-label">图书一级分类</label>
+                        <select class="custom-select d-block w-100" id="book_main_class" onchange="update_child_class()">
+                          {% if book_main_class_list %}
+                              {% if main_class_id != -1 %}
+                                    <option value="-1">无</option>
+                                    {% for book_main_class in book_main_class_list %}
+                                        {% if book_main_class.id == main_class_id %}
+                                            <option value="{{ book_main_class.id }}" selected="selected">{{ book_main_class.name }}</option>
+                                        {% else %}
+                                            <option value="{{ book_main_class.id }}">{{ book_main_class.name }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                              {% else %}
+                                  <option value="-1">无</option>
+                                    {% for book_main_class in book_main_class_list %}
+                                            <option value="{{ book_main_class.id }}">{{ book_main_class.name }}</option>
+                                    {% endfor %}
+                              {% endif %}
+
+                          {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="book_child_class" class="col-form-label">图书二级分类</label>
+                        <select class="custom-select d-block w-100" id="book_child_class">
+                          {% if book_child_class_list %}
+                              <option value="-1">无</option>
+                              {% if child_class_id != -1 %}
+                                  {% for book_child_class in book_child_class_list %}
+                                      {% if book_child_class.id == child_class_id %}
+                                          <option value="{{ book_child_class.id }}" selected="selected">{{ book_child_class.name }}</option>
+                                      {% else %}
+                                          <option value="{{ book_child_class.id }}">{{ book_child_class.name }}</option>
+                                      {% endif %}
+                                  {% endfor %}
+                              {% else %}
+                                  {% for book_child_class in book_child_class_list %}
+                                      <option value="{{ book_child_class.id }}">{{ book_child_class.name }}</option>
+                                  {% endfor %}
+                              {% endif %}
+                          {% else %}
+                                <option value="-1">无</option>
+                          {% endif %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
         <div class="row mb-5"></div>
         <div class="row mb-2">
             {% if books %}
@@ -14,7 +77,7 @@
                           <h4 class="mb-1">
                                 {{ book.book_name }}
                           </h4>
-                            <span style="width: 180px;">{{ book.brief_introduction | slice:"0:60" }}</span>
+                          <span style="width: 180px;">{{ book.brief_introduction | slice:"0:60" }}</span>
                           <button type="button" class="btn btn-secondary btn-lg" onclick="book_borrowing({{ book.id }})">借书</button>
                         </div>
                         <img class="card-img-right flex-auto d-none d-md-block" src="{{ book.cover_img_pathname }}" alt="Card image cap" style="width: 210px;height: 250px" onclick="book_detailed_info({{ book.id }})">
@@ -23,12 +86,13 @@
                 {% endfor %}
             {% endif %}
         </div>
+
         {% if books %}
             <nav aria-label="Page navigation example">
               <ul class="pagination justify-content-center">
                   {% if books.has_previous %}
                     <li class="page-item">
-                      <a class="page-link" href="?page={{ books.previous_page_number }}" tabindex="-1">上一页</a>
+                        <a class="page-link" onclick="search_books({{ books.previous_page_number }})" tabindex="-1">上一页</a>
                     </li>
                     {% else %}
                     <li class="page-item disabled">
@@ -38,16 +102,16 @@
                 {% for pg in books.paginator.page_range %}
                     {% if books.number == pg %}
                           <li class="page-item active">
-                            <a class="page-link" href="?page={{ pg }}">{{ pg }}<span class="sr-only">(current)</span></a>
+                                <a class="page-link" onclick="search_books({{ pg }})">{{ pg }}<span class="sr-only">(current)</span></a>
                           </li>
                     {% else %}
-                          <li class="page-item"><a class="page-link" href="?page={{ pg }}">{{ pg }}</a></li>
+                          <li class="page-item"><a class="page-link" onclick="search_books({{ pg }})">{{ pg }}</a></li>
                     {% endif %}
                 {% endfor %}
 
                 {% if books.has_next %}
                       <li class="page-item">
-                        <a class="page-link" href="?page={{ books.next_page_number }}">下一页</a>
+                          <a class="page-link" onclick="search_books({{ books.next_page_number }})">下一页</a>
                       </li>
                     {% else %}
                       <li class="page-item disabled">
@@ -114,5 +178,35 @@
                 $('#exampleModalCenter').modal('show')
             }
 
+    }
+
+    function search_books(page){
+        var search_name = $("#book_search").val();
+        var main_class_id = $('#book_main_class').val()
+        var child_class_id = $('#book_child_class').val()
+
+        if(page == undefined){
+            window.location.href="/book_borrow/?search_name="+search_name+"&main_class_id="+main_class_id+"&child_class_id="+child_class_id;
+        }else{
+            window.location.href="/book_borrow/?search_name="+search_name+"&main_class_id="+main_class_id+"&child_class_id="+child_class_id+"&page="+page;
+        }
+    }
+
+    function update_child_class() {
+        var main_class_id = $('#book_main_class').val()
+        $.get({
+            url: "/book_borrow/update_child_class/" + main_class_id,
+            dataType: 'json',
+            success: function (data) {
+                $('#book_child_class').html('')
+                $('#book_child_class').append("<option value='-1'>无</option>")
+                for (var i = 0; i < data.book_child_class_list.length; i++) {
+                    $('#book_child_class').append("<option value='" + data.book_child_class_list[i].id + "'>" + data.book_child_class_list[i].name + "</option>")
+                }
+            },
+            error: function(data){
+                alert(data);
+            }
+        })
     }
 {% endblock %}
